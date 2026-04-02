@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预约管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 14px; }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .date-btn {
+            padding: 10px 20px;
+            background: #f5f7fa;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .date-btn:hover { background: #e8f4f8; }
+        .date-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .time-item {
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .time-item:hover { background: #e8f4f8; }
+        .time-item.available {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .time-item.booked {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+            cursor: not-allowed;
+        }
+        .time-item .time { font-weight: 600; margin-bottom: 5px; }
+        .time-item .status { font-size: 12px; }
+        .booking-list {
+            list-style: none;
+        }
+        .booking-item {
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .booking-info { flex: 1; }
+        .booking-info .name { font-weight: 600; color: #333; }
+        .booking-info .detail { font-size: 13px; color: #666; margin-top: 5px; }
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-cancel:hover { background: #c82333; }
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+        .btn-confirm:hover { background: #218838; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; opacity: 0.9; }
+        .toggle-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 预约管理后台</h1>
+            <p>管理可预约时间段 · 查看预约记录</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalBookings">0</div>
+                <div class="stat-label">总预约数</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);">
+                <div class="stat-number" id="pendingBookings">0</div>
+                <div class="stat-label">待确认</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-number" id="availableSlots">0</div>
+                <div class="stat-label">可预约时段</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📅 管理可预约时间</div>
+            <div class="date-selector" id="adminDateSelector"></div>
+            <div class="time-grid" id="adminTimeGrid"></div>
+            <button class="toggle-btn" onclick="toggleTimeSlot()">切换时间段状态</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📝 预约记录</div>
+            <ul class="booking-list" id="bookingList">
+                <li class="empty-state">暂无预约记录</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        let availableSlots = {
+            '2026-04-02': ['09:00-09:30', '09:30-10:00', '10:00-10:30', '14:00-14:30'],
+            '2026-04-03': ['09:00-09:30', '10:30-11:00', '14:00-14:30', '15:00-15:30'],
+            '2026-04-04': ['09:00-09:30', '09:30-10:00', '14:00-14:30', '19:00-19:30']
+        };
+
+        let bookings = [
+            {
+                id: 1,
+                date: '2026-04-02',
+                time: '10:30-11:00',
+                name: '张三',
+                wechat: 'zhangsan123',
+                phone: '138****1234',
+                question: '减脂咨询',
+                status: 'pending'
+            }
+        ];
+
+        let selectedAdminDate = null;
+        let selectedTimeSlot = null;
+
+        const TIME_SLOTS = [
+            '09:00-09:30', '09:30-10:00', '10:00-10:30', '10:30-11:00',
+            '11:00-11:30', '14:00-14:30', '14:30-15:00', '15:00-15:30',
+            '15:30-16:00', '16:00-16:30', '19:00-19:30', '19:30-20:00'
+        ];
+
+        function generateDates() {
+            const dates = [];
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                dates.push(dateStr);
+            }
+            return dates;
+        }
+
+        function renderAdminDates() {
+            const container = document.getElementById('adminDateSelector');
+            const dates = generateDates();
+            container.innerHTML = dates.map((d, i) => `
+                <div class="date-btn ${i === 0 ? 'active' : ''}" 
+                     onclick="selectAdminDate('${d}', this)">
+                    ${d.slice(5)}
+                </div>
+            `).join('');
+            selectedAdminDate = dates[0];
+            renderAdminTimeGrid();
+        }
+
+        function selectAdminDate(date, el) {
+            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            selectedAdminDate = date;
+            selectedTimeSlot = null;
+            renderAdminTimeGrid();
+        }
+
+        function renderAdminTimeGrid() {
+            const container = document.getElementById('adminTimeGrid');
+            const available = availableSlots[selectedAdminDate] || [];
+            const bookedTimes = bookings.filter(b => b.date === selectedAdminDate).map(b => b.time);
+
+            container.innerHTML = TIME_SLOTS.map(time => {
+                const isAvailable = available.includes(time);
+                const isBooked = bookedTimes.includes(time);
+                let className = 'time-item';
+                let status = '可预约';
+
+                if (isBooked) {
+                    className += ' booked';
+                    status = '已预约';
+                } else if (isAvailable) {
+                    className += ' available';
+                    status = '开放中';
+                } else {
+                    status = '未开放';
+                }
+
+                return `
+                    <div class="${className}" onclick="selectTimeSlot('${time}')">
+                        <div class="time">${time}</div>
+                        <div class="status">${status}</div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        function selectTimeSlot(time) {
+            selectedTimeSlot = time;
+        }
+
+        function toggleTimeSlot() {
+            if (!selectedTimeSlot) {
+                alert('请先选择一个时间段');
+                return;
+            }
+
+            const available = availableSlots[selectedAdminDate] || [];
+            const index = available.indexOf(selectedTimeSlot);
+
+            if (index > -1) {
+                // 关闭时间段
+                available.splice(index, 1);
+                alert(`已关闭 ${selectedTimeSlot} 的预约`);
+            } else {
+                // 开放时间段
+                available.push(selectedTimeSlot);
+                alert(`已开放 ${selectedTimeSlot} 的预约`);
+            }
+
+            availableSlots[selectedAdminDate] = available;
+            renderAdminTimeGrid();
+        }
+
+        function renderBookingList() {
+            const container = document.getElementById('bookingList');
+            
+            if (bookings.length === 0) {
+                container.innerHTML = '<li class="empty-state">暂无预约记录</li>';
+                return;
+            }
+
+            container.innerHTML = bookings.map(b => `
+                <li class="booking-item">
+                    <div class="booking-info">
+                        <div class="name">${b.name} · ${b.time}</div>
+                        <div class="detail">📅 ${b.date} | 💬 ${b.question}</div>
+                        <div class="detail">📱 ${b.phone} | 💬 微信：${b.wechat}</div>
+                    </div>
+                    <div class="booking-actions">
+                        ${b.status === 'pending' ? `
+                            <button class="btn btn-confirm" onclick="confirmBooking(${b.id})">确认</button>
+                            <button class="btn btn-cancel" onclick="cancelBooking(${b.id})">取消</button>
+                        ` : `<span style="color:#28a745;">已确认</span>`}
+                    </div>
+                </li>
+            `).join('');
+
+            updateStats();
+        }
+
+        function confirmBooking(id) {
+            const booking = bookings.find(b => b.id === id);
+            if (booking) {
+                booking.status = 'confirmed';
+                alert(`已确认 ${booking.name} 的预约`);
+                renderBookingList();
+            }
+        }
+
+        function cancelBooking(id) {
+            const booking = bookings.find(b => b.id === id);
+            if (booking) {
+                if (confirm(`确定取消 ${booking.name} 的预约吗？`)) {
+                    bookings = bookings.filter(b => b.id !== id);
+                    alert('已取消预约');
+                    renderBookingList();
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalBookings').textContent = bookings.length;
+            document.getElementById('pendingBookings').textContent = bookings.filter(b => b.status === 'pending').length;
+            
+            let totalAvailable = 0;
+            Object.values(availableSlots).forEach(slots => totalAvailable += slots.length);
+            document.getElementById('availableSlots').textContent = totalAvailable;
+        }
+
+        // 初始化
+        renderAdminDates();
+        renderBookingList();
+    </script>
+</body>
+</html>

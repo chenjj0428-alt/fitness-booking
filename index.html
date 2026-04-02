@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健身咨询预约 - 1 对 1 专业指导</title>
+    <meta name="description" content="专业健身咨询，1 对 1 线上指导，30 分钟/次">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 15px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .header h1 { font-size: 24px; color: #333; margin-bottom: 8px; font-weight: 700; }
+        .header p { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .header .price { color: #ff6b6b; font-size: 18px; font-weight: 600; margin-top: 10px; }
+        .section { margin-bottom: 25px; }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .icon { font-size: 18px; }
+        .date-selector {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 5px 0 10px;
+            scrollbar-width: none;
+        }
+        .date-selector::-webkit-scrollbar { display: none; }
+        .date-item {
+            flex-shrink: 0;
+            padding: 12px 18px;
+            background: #f5f7fa;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            min-width: 70px;
+        }
+        .date-item:hover { background: #e8f4f8; transform: translateY(-2px); }
+        .date-item.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .date-item .day { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+        .date-item .date { font-size: 16px; font-weight: 600; }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .time-slot {
+            padding: 12px 8px;
+            background: #f5f7fa;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            font-size: 13px;
+        }
+        .time-slot:hover { background: #e8f4f8; transform: translateY(-2px); }
+        .time-slot.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .time-slot.disabled {
+            background: #f0f0f0;
+            color: #ccc;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            transform: none;
+        }
+        .time-slot .time { font-weight: 600; margin-bottom: 4px; font-size: 12px; }
+        .time-slot .status { font-size: 10px; opacity: 0.8; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group .hint { font-size: 12px; color: #999; margin-top: 5px; }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .success-modal.show { display: flex; }
+        .success-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.3);
+        }
+        .success-content h2 { font-size: 22px; color: #333; margin-bottom: 10px; }
+        .success-content p { color: #666; margin-bottom: 20px; }
+        .success-info {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .success-info p { margin-bottom: 8px; font-size: 14px; text-align: left; }
+        .success-info strong { color: #333; }
+        .close-btn {
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .footer-note {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        .footer-note p { margin-bottom: 5px; }
+        .footer-note .highlight { color: #667eea; font-weight: 600; }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px 0;
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        .feature-item { text-align: center; }
+        .feature-item .icon { font-size: 24px; margin-bottom: 8px; }
+        .feature-item .text { font-size: 12px; color: #666; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .loading-spinner {
+            width: 30px; height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="avatar">💪</div>
+            <h1>健身咨询预约</h1>
+            <p>1 对 1 专业线上指导</p>
+            <p>⏱️ 每次 30 分钟 · 📍 微信视频</p>
+            <div class="price">💰 ¥99/次</div>
+        </div>
+
+        <!-- 特色展示 -->
+        <div class="features">
+            <div class="feature-item">
+                <div class="icon">🎯</div>
+                <div class="text">个性化方案</div>
+            </div>
+            <div class="feature-item">
+                <div class="icon">📊</div>
+                <div class="text">科学指导</div>
+            </div>
+            <div class="feature-item">
+                <div class="icon">💬</div>
+                <div class="text">随时答疑</div>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+        <!-- 日期选择 -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">📅</span>
+                选择日期
+            </div>
+            <div class="date-selector" id="dateSelector">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 时间段选择 -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">⏰</span>
+                选择时间段
+            </div>
+            <div class="time-slots" id="timeSlots">
+                <div class="loading">
+                    <p style="color:#999;font-size:13px;">请先选择日期</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 个人信息 -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">👤</span>
+                个人信息
+            </div>
+            <div class="form-group">
+                <label>姓名 *</label>
+                <input type="text" id="name" placeholder="请输入您的姓名" required>
+            </div>
+            <div class="form-group">
+                <label>微信号 *</label>
+                <input type="text" id="wechat" placeholder="请输入您的微信号" required>
+                <div class="hint">用于咨询前联系您</div>
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="phone" placeholder="请输入您的手机号（选填）">
+            </div>
+            <div class="form-group">
+                <label>咨询问题 *</label>
+                <textarea id="question" placeholder="请简单描述您想咨询的问题&#10;例如：&#10;• 想减掉腹部脂肪&#10;• 想增加肌肉量&#10;• 体态矫正（圆肩/驼背等）&#10;• 运动康复指导" required></textarea>
+                <div class="hint">越详细越好，方便我提前准备方案</div>
+            </div>
+            <div class="form-group">
+                <label>咨询类型</label>
+                <select id="consultType">
+                    <option value="">请选择咨询类型</option>
+                    <option value="减脂塑形">🔥 减脂塑形</option>
+                    <option value="增肌训练">💪 增肌训练</option>
+                    <option value="体态矫正">🧘 体态矫正</option>
+                    <option value="运动康复">🏥 运动康复</option>

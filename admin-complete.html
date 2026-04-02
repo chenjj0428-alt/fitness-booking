@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预约管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 24px; color: #333; }
+        .header p { color: #666; font-size: 14px; margin-top: 5px; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card .icon { font-size: 30px; margin-bottom: 10px; }
+        .stat-card .number { font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .stat-card .label { font-size: 13px; color: #999; }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .date-btn {
+            padding: 10px 20px;
+            background: #f5f7fa;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .date-btn:hover { background: #e8f4f8; }
+        .date-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .time-item {
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .time-item:hover { background: #e8f4f8; transform: translateY(-2px); }
+        .time-item.available {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .time-item.booked {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+            cursor: not-allowed;
+        }
+        .time-item .time { font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+        .time-item .status { font-size: 11px; }
+        .booking-list { list-style: none; }
+        .booking-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .booking-item:hover { background: #f5f7fa; transform: translateX(5px); }
+        .booking-info { flex: 1; }
+        .booking-info .header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .booking-info .name { font-weight: 600; color: #333; font-size: 16px; }
+        .booking-info .time { background: #667eea; color: white; padding: 3px 8px; border-radius: 5px; font-size: 12px; }
+        .booking-info .detail { font-size: 13px; color: #666; margin-bottom: 5px; }
+        .booking-info .question { font-size: 13px; color: #999; font-style: italic; }
+        .booking-actions { display: flex; gap: 10px; }
+        .toggle-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state .icon { font-size: 50px; margin-bottom: 15px; }
+        .export-btn {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .export-btn:hover { background: #218838; }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #ffc107; color: #856404; }
+        .badge-confirmed { background: #28a745; color: white; }
+        .badge-cancelled { background: #dc3545; color: white; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+        .modal-body { margin-bottom: 20px; }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📋 预约管理后台</h1>
+                <p>管理可预约时间段 · 查看预约记录</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="exportData()">📊 导出数据</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清空数据</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="icon">📝</div>
+                <div class="number" id="totalBookings">0</div>
+                <div class="label">总预约数</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⏳</div>
+                <div class="number" id="pendingBookings">0</div>
+                <div class="label">待确认</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">✅</div>
+                <div class="number" id="confirmedBookings">0</div>
+                <div class="label">已确认</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🕐</div>
+                <div class="number" id="availableSlots">0</div>
+                <div class="label">可预约时段</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📅 管理可预约时间</div>
+            <div class="date-selector" id="adminDateSelector"></div>
+            <div class="time-grid" id="adminTimeGrid"></div>
+            <button class="toggle-btn" onclick="toggleTimeSlot()">切换选中时间段状态</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📝 预约记录</div>
+            <div style="margin-bottom:15px;">
+                <button class="btn btn-primary" onclick="showFilterModal()">🔍 筛选</button>
+                <button class="export-btn" onclick="exportToExcel()">📥 导出 Excel</button>
+            </div>
+            <ul class="booking-list" id="bookingList">
+                <li class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>暂无预约记录</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 预约详情弹窗 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-title">📋 预约详情</div>
+            <div class="modal-body" id="detailContent"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">关闭</button>
+                <button class="btn btn-success" id="confirmBtn" onclick="confirmBooking()">确认预约</button>
+                <button class="btn btn-danger" id="cancelBtn" onclick="cancelBooking()">取消预约</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TIME_SLOTS = [
+            '09:00-09:30', '09:30-10:00', '10:00-10:30', '10:30-11:00',
+            '11:00-11:30', '14:00-14:30', '14:30-15:00', '15:00-15:30',
+            '15:30-16:00', '16:00-16:30', '19:00-19:30', '19:30-20:00'
+        ];
+
+        let availableSlots = {};
+        let bookings = [];
+        let selectedAdminDate = null;
+        let selectedTimeSlot = null;
+        let currentBookingId = null;
+
+        // 从 localStorage 加载数据
+        function loadData() {
+            const slots = localStorage.getItem('availableSlots');
+            if (slots) {
+                availableSlots = JSON.parse(slots);
+            }
+            const data = localStorage.getItem('bookings');
+            if (data) {
+                bookings = JSON.parse(data);
+            }
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('availableSlots', JSON.stringify(availableSlots));
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+        }
+
+        function generateDates() {
+            const dates = [];
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                dates.push(dateStr);
+            }
+            return dates;
+        }
+
+        function renderAdminDates() {
+            const container = document.getElementById('adminDateSelector');
+            const dates = generateDates();
+            container.innerHTML = dates.map((d, i) => `
+                <div class="date-btn ${i === 0 ? 'active' : ''}" 
+                     onclick="selectAdminDate('${d}', this)">
+                    ${d.slice(5)}
+                </div>
+            `).join('');
+            selectedAdminDate = dates[0];
+            renderAdminTimeGrid();
+        }
+
+        function selectAdminDate(date, el) {
+            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            selectedAdminDate = date;
+            selectedTimeSlot = null;
+            renderAdminTimeGrid();
+        }
+
+        function renderAdminTimeGrid() {
+            const container = document.getElementById('adminTimeGrid');
+            const available = availableSlots[selectedAdminDate] || [];
+            const bookedTimes = bookings.filter(b => b.date === selectedAdminDate && b.status !== 'cancelled').map(b => b.time);
+
+            container.innerHTML = TIME_SLOTS.map(time => {
+                const isAvailable = available.includes(time);
+                const isBooked = bookedTimes.includes(time);
+                let className = 'time-item';
+                let status = '未开放';
+
+                if (isBooked) {
+                    className += ' booked';
+                    status = '已预约';
+                } else if (isAvailable) {
+                    className += ' available';
+                    status = '开放中';
+                }
+
+                return `
+                    <div class="${className}" onclick="selectTimeSlot('${time}')">
+                        <div class="time">${time}</div>
+                        <div class="status">${status}</div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        function selectTimeSlot(time) {
+            selectedTimeSlot = time;
+        }
+
+        function toggleTimeSlot() {
+            if (!selectedTimeSlot) {
+                alert
